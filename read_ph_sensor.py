@@ -4,17 +4,43 @@ import sched
 import csv
 from datetime import datetime
 import os
+import re
 
-def read_instrument(port, baudrate, timeout=1):
+def read_instrument(port, baudrate, timeout=2):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
-        ser.write(b'\r')
-        time.sleep(0.5)
+        while True:
+            ser.write(b'\r')
+            print("wakeup!")
+            time.sleep(0.5)  # Short delay between attempts
+            response = ser.readline().decode('ascii').strip()
+            print(response)
+            if response.startswith("NAK"):
+                break
+        
+        # Send the TS command
         ser.write(b'ts\r')
-        response = ser.readline().decode('ascii').strip()
-    return response
+        print("Sent TS command")
+        
+        # Read lines until we get one starting with '#'
+        while True:
+            response = ser.readline().decode('ascii').strip()
+            print(response)
+            if response.startswith('#'):
+                return response
 
 def parse_data(data):
-    return data.split(',')
+    # Use regex to split the data, handling variable whitespace
+    pattern = r'#(\d+)\s+(\d{2}/\d{2}/\d{4})\s+(\d{2}:\d{2}:\d{2})\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+(\d+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)'
+    match = re.match(pattern, data)
+    
+    if match:
+        samp_num = int(match.group(1))
+        datetime_str = f"{match.group(2)} {match.group(3)}"
+        values = [float(match.group(i)) for i in range(4, 15)]
+        
+        return [samp_num, datetime_str] + values
+    else:
+        raise ValueError("Invalid data format")
 
 def log_data(filename, data):
     file_exists = os.path.isfile(filename)
@@ -52,7 +78,7 @@ def scheduled_reading(scheduler, port, baudrate, filename):
     scheduler.enter(10, 1, scheduled_reading, (scheduler, port, baudrate, filename))
 
 if __name__ == "__main__":
-    PORT = '/dev/ttyUSB0'  # Adjust this to your serial port
+    PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
     BAUDRATE = 115200  
     LOGFILE = 'instrument_data.csv'  # Name of the CSV file
     
