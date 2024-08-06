@@ -12,9 +12,11 @@ def read_instrument(port, baudrate, timeout=2):
             ser.write(b'\r')
             print("wakeup!")
             time.sleep(0.5)  # Short delay between attempts
-            response = ser.readline().decode('ascii').strip()
+            bytesToRead = ser.in_waiting
+            response = ser.read(bytesToRead).decode('ascii')
+            #response = ser.readline().decode('ascii').strip()
             print(response)
-            if response.startswith("NAK"):
+            if 'NAK' in response:
                 break
         
         # Send the TS command
@@ -78,7 +80,8 @@ def scheduled_reading(scheduler, port, baudrate, filename):
     scheduler.enter(10, 1, scheduled_reading, (scheduler, port, baudrate, filename))
 
 if __name__ == "__main__":
-    PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
+    PORT = 'COM6'  # Adjust this to your serial port
+    #PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
     BAUDRATE = 115200  
     LOGFILE = 'instrument_data.csv'  # Name of the CSV file
     
