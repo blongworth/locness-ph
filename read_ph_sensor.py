@@ -7,6 +7,11 @@ import os
 import re
 import sqlite3
 
+PORT = 'COM6'  # Adjust this to your serial port
+#PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
+BAUDRATE = 115200  
+LOGFILE = 'instrument_data.csv'  # Name of the CSV file
+    
 def read_instrument(port, baudrate, timeout=2):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
         while True:
@@ -88,11 +93,6 @@ def scheduled_reading(scheduler, port, baudrate, filename):
     scheduler.enter(10, 1, scheduled_reading, (scheduler, port, baudrate, filename))
 
 if __name__ == "__main__":
-    PORT = 'COM6'  # Adjust this to your serial port
-    #PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
-    BAUDRATE = 115200  
-    LOGFILE = 'instrument_data.csv'  # Name of the CSV file
-    
 
     # Connect to the SQLite database 
     conn = sqlite3.connect('data.db')
