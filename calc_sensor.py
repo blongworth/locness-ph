@@ -303,7 +303,7 @@ def ph_mfet(vrs, tempc, sal, k0, k2 = -0.001048):
     vrs"""
 
     tempk = tempc + 273.15
-    s_t = (R*tempk)/F*log(10)
+    s_t = (R*tempk)/F * np.log(10)
     z = 19.924*sal/(1000-1.005*sal)
     so4_tot = (0.14/96.062)*(sal/1.80655)
     ccl = 0.99889/35.453*sal/1.80655
