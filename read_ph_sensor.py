@@ -7,32 +7,34 @@ import os
 import re
 import sqlite3
 
+READ_TIME = 1 # time between readings
 PORT = 'COM6'  # Adjust this to your serial port
 #PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
 BAUDRATE = 115200  
-LOGFILE = 'instrument_data.csv'  # Name of the CSV file
+LOGFILE = 'C:/Users/CSL 2/Documents/LOCNESS_data/pH_data.csv'  # Name of the CSV file
+DB_PATH = 'C:/Users/CSL 2/Documents/LOCNESS_data/data.db' # Path to SQLite DB
     
 def read_instrument(port, baudrate, timeout=2):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
+        print("wakeup!")
         while True:
             ser.write(b'\r')
-            print("wakeup!")
-            time.sleep(0.5)  # Short delay between attempts
             bytesToRead = ser.in_waiting
-            response = ser.read(bytesToRead).decode('ascii')
-            #response = ser.readline().decode('ascii').strip()
-            print(response)
+            response = ser.read(bytesToRead).decode('ascii').strip()
             if 'NAK' in response:
+                print(response)
                 break
+            time.sleep(0.1)  # Short delay between attempts
         
         # Send the TS command
+        ser.reset_input_buffer
         ser.write(b'ts\r')
         print("Sent TS command")
         
         # Read lines until we get one starting with '#'
         while True:
             response = ser.readline().decode('ascii').strip()
-            print(response)
+            #print(response)
             if response.startswith('#'):
                 return response
 
@@ -90,12 +92,12 @@ def scheduled_reading(scheduler, port, baudrate, filename):
         print()
     
     # Schedule the next reading
-    scheduler.enter(10, 1, scheduled_reading, (scheduler, port, baudrate, filename))
+    scheduler.enter(READ_TIME, 1, scheduled_reading, (scheduler, port, baudrate, filename))
 
 if __name__ == "__main__":
 
     # Connect to the SQLite database 
-    conn = sqlite3.connect('data.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     # Create a table to store the data
@@ -110,7 +112,7 @@ if __name__ == "__main__":
     s = sched.scheduler(time.time, time.sleep)
     
     # schedule first reading immediately
-    s.enter(0, 1, scheduled_reading, (s, PORT, BAUDRATE, LOGFILE))
+    s.enter(0, READ_TIME, scheduled_reading, (s, PORT, BAUDRATE, LOGFILE))
     
     print(f"Starting scheduled readings every 10 seconds. Logging to {LOGFILE}. Press Ctrl+C to stop.")
     
