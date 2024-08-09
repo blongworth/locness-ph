@@ -7,12 +7,14 @@ import os
 import re
 import sqlite3
 
-READ_TIME = 1 # time between readings
+READ_TIME = 10 # time between readings
 PORT = 'COM6'  # Adjust this to your serial port
 #PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
 BAUDRATE = 115200  
-LOGFILE = 'C:/Users/CSL 2/Documents/LOCNESS_data/pH_data.csv'  # Name of the CSV file
-DB_PATH = 'C:/Users/CSL 2/Documents/LOCNESS_data/data.db' # Path to SQLite DB
+# LOGFILE = 'C:/Users/CSL 2/Documents/LOCNESS_data/pH_data.csv'  # Name of the CSV file
+# DB_PATH = 'C:/Users/CSL 2/Documents/LOCNESS_data/data.db' # Path to SQLite DB
+LOGFILE = 'pH_data.csv'  # Name of the CSV file
+DB_PATH = 'data.db' # Path to SQLite DB
     
 def read_instrument(port, baudrate, timeout=2):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
@@ -24,19 +26,25 @@ def read_instrument(port, baudrate, timeout=2):
             if 'NAK' in response:
                 print(response)
                 break
-            time.sleep(0.1)  # Short delay between attempts
+            time.sleep(0.3)  # Short delay between attempts
         
         # Send the TS command
-        ser.reset_input_buffer
         ser.write(b'ts\r')
         print("Sent TS command")
         
         # Read lines until we get one starting with '#'
-        while True:
+        # Need a t
+        count = 0
+        while True and count <= 20:
             response = ser.readline().decode('ascii').strip()
             #print(response)
             if response.startswith('#'):
                 return response
+            count+=1
+            time.sleep(0.1)
+        return 0
+        
+        
 
 def parse_data(data):
     # Use regex to split the data, handling variable whitespace
