@@ -62,7 +62,7 @@ def parse_data(data, temp, sal, k0, k2):
         values = [float(match.group(i)) for i in range(4, 15)]
         timestamp = time.time()
         ts = datetime.fromtimestamp(timestamp)
-        ph_free, ph_tot = calc_pH(values[8], 0, temp, sal, k0, k2)
+        ph_free, ph_tot = calc_pH(values[5], 0, temp, sal, k0, k2, 0)
         return [ts, samp_num, datetime_str] + values + [temp, sal, k0, k2, ph_free, ph_tot]
     else:
         raise ValueError("Invalid data format")
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     # Create a table to store the data
     # or append if it already exists
     c.execute('''CREATE TABLE IF NOT EXISTS ph
-            (samp_num INTEGER, ph_timestamp TEXT, 
+            (pc_timestamp TEXT, samp_num INTEGER, ph_timestamp TEXT, 
              v_bat REAL, v_bias_pos REAL, v_bias_neg REAL, 
              t_board REAL, h_board REAL, vrse REAL, vrse_std REAL, 
              cevk REAL, cevk_std REAL, ce_ik REAL, i_sub REAL,
