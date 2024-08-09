@@ -297,27 +297,46 @@ def pH_sbe(cal,Vrs,pres,tem,sal):
 
 def ph_mfet(vrs, tempc, sal, k0, k2 = -0.001048):
     """
-    Calculate pH from raw MFET sensor output
-    
-    Parameters
-    vrs"""
+    Calculate pH from raw mFET sensor output
 
-    tempk = tempc + 273.15
-    s_t = (R*tempk)/F * np.log(10)
-    z = 19.924*sal/(1000-1.005*sal)
-    so4_tot = (0.14/96.062)*(sal/1.80655)
-    ccl = 0.99889/35.453*sal/1.80655
-    mcl = ccl*1000/(1000-sal*35.165/35)
+    Parameters
+    ----------
+    vrs : array_like
+        Voltage bewteen reference electrode and ISFET source [V]
+    tempc : TYPE
+        Temperature [deg C]
+    sal : TYPE
+        Salinity (usually CTD salinity) [PSS]
+    k0 : TYPE
+        Sensor reference potential (intercept at tem = 0C)
+    k2 : TYPE
+        linear temerature coefficient (slope)
+
+
+    Returns
+    -------
+    phfree : TYPE
+        mol/kg-seawater scale
+    phtot : TYPE
+        total proton scale
+
+    """
+
+    tempk = tempc + K0 # temp to K
+    s_t = (R*tempk)/F * np.log(10) # Nernst temp dependence
+    z = 19.924*sal/(1000-1.005*sal) # Ionic strength Dickson 2007
+    so4_tot = (0.14/96.062)*(sal/1.80655) # Tot conservative sulphate
+    ccl = 0.99889/35.453*sal/1.80655 # conservative chloride
+    mcl = ccl*1000/(1000-sal*35.165/35) # mol/kg H20
 
     # BISULFIDE DISSOCIATION CONSTANT AT T,S AND IONIC STRENGTH(mol/kg solution)
     # Dickson et al. 2007: Chap 5, p12 Eq 33
     Khso4 = np.exp(-4276.1 / tempk + 141.328 - 23.093 * np.log(tempk) + \
-        (-13856 / tempk + 324.57 - 47.986 * np.log(tempk)) * z ** 0.5 + \
-        (35474 / tempk - 771.54 + 114.723 * np.log(tempk)) * z - \
-        2698 / tempk * z ** 1.5 + 1776 / tempk * z ** 2 + \
-        np.log(1 - 0.001005 * sal))
+        (-13856 / tempk + 324.57 - 47.986 * np.log(tempk)) * np.sqrt(z) + \
+        (35474 / tempk - 771.54 + 114.723 * np.log(tempk)) * z - 2698 / tempk * np.pow(z, 1.5) + \
+        1776 / tempk * np.pow(z, 2) + np.log(1 - 0.001005 * sal))
 
-    dh_const = 0.00000343 * tempc ** 2 + 0.00067524 * tempc + 0.49172143
+    dh_const = 0.00000343 * tempc ** 2 + 0.00067524 * tempc + 0.49172143 # Debye-Huckel 1977
     log_gamma_hcl = 2 * (-dh_const * np.sqrt(z) / (1 + 1.394 * np.sqrt(z)) + \
         (0.08885 - 0.000111 * tempc) * z)
     phext_free = -(((k0 + k2 * tempc) - vrs) - s_t * (np.log10(mcl) + log_gamma_hcl )) / s_t
@@ -325,4 +344,3 @@ def ph_mfet(vrs, tempc, sal, k0, k2 = -0.001048):
     phext_tot = phext_free - np.log10(1 + so4_tot / Khso4)
 
     return (phext_free,phext_tot)
-
