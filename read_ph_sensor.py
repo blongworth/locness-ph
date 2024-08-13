@@ -84,7 +84,7 @@ def log_data(filename, data):
             # Write header if file doesn't exist
             csvwriter.writerow(['pc_time', 'samp_num', 'ph_time', 'v_bat', 'v_bias_pos', 'v_bias_neg', 
                                 't_board', 'h_board', 'vrse', 'vrse_std', 'cevk', 'cevk_std', 
-                                'ce_ik', 'i_sub', 'cal_temp', 'cal_sal', 'k0', 'k2', 'pH_free', 'ph_total'])
+                                'ce_ik', 'i_sub', 'cal_temp', 'cal_sal', 'k0', 'k2', 'ph_free', 'ph_total'])
         
         csvwriter.writerow(data)
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
              t_board REAL, h_board REAL, vrse REAL, vrse_std REAL, 
              cevk REAL, cevk_std REAL, ce_ik REAL, i_sub REAL,
              cal_temp REAL, cal_sal REAL, k0 REAL, k2 REAL,
-             pH_free REAL, ph_total REAL
+             ph_free REAL, ph_total REAL
              )''')
 
     s = sched.scheduler(time.time, time.sleep)
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     # schedule first reading immediately
     s.enter(0, READ_TIME, scheduled_reading, (s, PORT, BAUDRATE, LOGFILE))
     
-    print(f"Starting scheduled readings every 10 seconds. Logging to {LOGFILE}. Press Ctrl+C to stop.")
+    print(f"Starting scheduled readings every {READ_TIME} seconds. Logging to {LOGFILE}. Press Ctrl+C to stop.")
     
     try:
         s.run()
