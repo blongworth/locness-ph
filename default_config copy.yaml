@@ -1,0 +1,23 @@
+# Default configuration
+# Copy this template to config.yaml and edit as appropriate
+
+read_time: 10  # time between readings
+
+sensor:
+    port: COM6
+    baudrate: 115200
+
+file:
+    logfile: pH_data.csv
+    db_path: data.db
+
+calibration:
+    temp: 25
+    sal: 30
+    k0: -1.42765
+    k2: -0.001037
+
+# Alternate values
+# PORT = '/dev/tty.usbserial-FT9439MT0'  # Adjust this to your serial port
+# LOGFILE = 'C:/Users/CSL 2/Documents/LOCNESS_data/pH_data.csv'  # Name of the CSV file
+# DB_PATH = 'C:/Users/CSL 2/Documents/LOCNESS_data/data.db' # Path to SQLite DB

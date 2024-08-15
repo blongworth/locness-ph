@@ -6,9 +6,23 @@ from datetime import datetime
 import os
 import re
 import sqlite3
+import yaml
 from calc_pH_DeepSeapHOx import calc_pH
-from default_config import *
-from config import *
+
+# Read the configuration file
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+
+# Access configuration values
+READ_TIME = config['read_time']
+PORT = config['sensor']['port']
+BAUDRATE = config['sensor']['baudrate']
+LOGFILE = config['file']['logfile']
+DB_PATH = config['file']['db_path']
+TEMP = config['calibration']['temp']
+SAL = config['calibration']['sal']
+K0 = config['calibration']['k0']
+K2 = config['calibration']['k2']
 
 def read_instrument(port, baudrate, timeout=2):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
