@@ -8,6 +8,8 @@ import re
 import sqlite3
 import yaml
 from calc_pH_DeepSeapHOx import calc_pH
+import logging
+#from datetime import timezone
 
 # Read the configuration file
 with open('config.yaml', 'r') as file:
@@ -17,31 +19,48 @@ with open('config.yaml', 'r') as file:
 READ_TIME = config['read_time']
 PORT = config['sensor']['port']
 BAUDRATE = config['sensor']['baudrate']
-LOGFILE = config['file']['logfile']
-DB_PATH = config['file']['db_path']
+DATAFILE = config['file']['data']
+LOGFILE = config['file']['log']
+DB_PATH = config['file']['db']
 TEMP = config['calibration']['temp']
 SAL = config['calibration']['sal']
 K0 = config['calibration']['k0']
 K2 = config['calibration']['k2']
 
+# Set the timezone to UTC
+#logging.Formatter.converter = lambda *args: datetime.now(timezone.utc).timetuple()
+# Configure logging
+logging.basicConfig(
+    # filename=LOGFILE,
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%dT%H:%M:%S%z',
+     handlers=[
+        logging.FileHandler(LOGFILE),
+        logging.StreamHandler()
+    ]
+)
+
+# Start logger
+logger = logging.getLogger(__name__)
+
 def read_instrument(port, baudrate, timeout=2):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
-        print("wakeup!")
+        logger.info("Wake mFET")
         while True:
             ser.write(b"\r")
             bytesToRead = ser.in_waiting
             response = ser.read(bytesToRead).decode("ascii").strip()
             if "NAK" in response:
-                print(response)
+                logger.info(f"Wake response: {response}")
                 break
             time.sleep(0.3)  # Short delay between attempts
 
         # Send the TS command
         ser.write(b"ts\r")
-        print("Sent TS command")
+        logger.info("Sent TS command")
 
         # Read lines until we get one starting with '#'
-        # Need a t
         count = 0
         while True and count <= 20:
             response = ser.readline().decode("ascii").strip()
@@ -51,7 +70,6 @@ def read_instrument(port, baudrate, timeout=2):
             count += 1
             time.sleep(0.1)
         return 0
-
 
 def parse_data(data, temp, sal, k0, k2):
     # Use regex to split the data, handling variable whitespace
@@ -123,16 +141,13 @@ def scheduled_reading(scheduler, port, baudrate, filename):
             parsed_data = parse_data(raw_data, TEMP, SAL, K0, K2)
             log_data(filename, parsed_data)
             log_data_db(parsed_data)
-            print("Logged data:", parsed_data)
+            logger.info(f"Logged data: {parsed_data}")
         else:
-            print(f"Time: {datetime.now().strftime('%m/%d/%Y %H:%M:%S')}")
-            print("No data received from the instrument")
-            print()
+            logger.error("No data received from the instrument")
 
     except serial.SerialException as e:
-        print(f"Error: {e}")
-        print("Please check your serial port configuration and connections.")
-        print()
+        logger.error(e)
+        exit(1)
 
     # Schedule the next reading
     scheduler.enter(
@@ -159,14 +174,12 @@ if __name__ == "__main__":
     s = sched.scheduler(time.time, time.sleep)
 
     # schedule first reading immediately
-    s.enter(0, READ_TIME, scheduled_reading, (s, PORT, BAUDRATE, LOGFILE))
+    s.enter(0, READ_TIME, scheduled_reading, (s, PORT, BAUDRATE, DATAFILE))
 
-    print(
-        f"Starting scheduled readings every {READ_TIME} seconds. Logging to {LOGFILE}. Press Ctrl+C to stop."
-    )
+    logger.info(f"Starting scheduled readings every {READ_TIME} seconds. Logging to {DATAFILE}. Press Ctrl+C to stop.")
 
     try:
         s.run()
     except KeyboardInterrupt:
         conn.close()
-        print("\nScheduled readings stopped.")
+        logger.info("Scheduled readings stopped.")
