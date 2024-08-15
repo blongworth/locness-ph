@@ -8,11 +8,16 @@ Calculation code is from https://github.com/SUPScientist/pH-with-the-Honeywell-D
 
 # Installation
 
-After cloning the github repo, create a python venv for the project and install dependencies.
+After cloning the github repo:
+
+* Create a python venv for the project: 'python -m venv .venv`. 
+* Activate the venv: `source .venv/bin/activate`. 
+* Install dependencies. `pip install -r requirements.txt`.
+* Copy `default_config.yaml` to `config.yaml` and edit as needed, 
+especially serial port and file config. 
 
 # Use
 
-Determine the correct serial port for the mFET using a terminal program (terraterm, CoolTerm).
-Set serial port and other parameters near the top of `read_ph_sensor.py`
-Run the python program. Data and communications should be logged to the terminal, and data should be added to the files specified.
+Run the python program. Data and communications should be logged to the terminal and logfile, and data should be added to the files specified.
+
 Quit using `Ctrl-C`.
