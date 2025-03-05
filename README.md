@@ -10,7 +10,7 @@ Calculation code is from https://github.com/SUPScientist/pH-with-the-Honeywell-D
 
 After cloning the github repo:
 
-* Create a python venv for the project: 'python -m venv .venv`. 
+* Create a python venv for the project: 'python -m venv .venv`, or just use `uv` which will set up the environment from `pyproject.toml`. 
 * Activate the venv: `source .venv/bin/activate`. 
 * Install dependencies. `pip install -r requirements.txt`.
 * Copy `default_config.yaml` to `config.yaml` and edit as needed, 
