@@ -53,6 +53,7 @@ def read_instrument(port, baudrate, timeout=2):
             response = ser.read(bytesToRead).decode("ascii").strip()
             if "NAK" in response:
                 logger.info(f"Wake response: {response}")
+                time.sleep(0.3)  # Short delay between attempts
                 break
             time.sleep(0.3)  # Short delay between attempts
 
