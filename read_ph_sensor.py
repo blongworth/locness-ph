@@ -44,22 +44,23 @@ logging.basicConfig(
 # Start logger
 logger = logging.getLogger(__name__)
 
-def read_instrument(port, baudrate, timeout=2):
+def read_instrument(port, baudrate, timeout=2, polled=True):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
-        logger.info("Wake mFET")
-        while True:
-            ser.write(b"\r")
-            bytesToRead = ser.in_waiting
-            response = ser.read(bytesToRead).decode("ascii").strip()
-            if "NAK" in response:
-                logger.info(f"Wake response: {response}")
-                time.sleep(0.2)  # Short delay between attempts
-                break
-            time.sleep(0.2)  # Short delay between attempts
+        if polled == True:
+            logger.info("Wake mFET")
+            while True:
+                ser.write(b"\r")
+                bytesToRead = ser.in_waiting
+                response = ser.read(bytesToRead).decode("ascii").strip()
+                if "NAK" in response:
+                    logger.info(f"Wake response: {response}")
+                    time.sleep(0.3)  # Short delay between attempts
+                    break
+                time.sleep(0.3)  # Short delay between attempts
 
-        # Send the TS command
-        ser.write(b"ts\r")
-        logger.info("Sent TS command")
+            # Send the TS command
+            ser.write(b"ts\r")
+            logger.info("Sent TS command")
 
         # Read lines until we get one starting with '#'
         count = 0
@@ -140,8 +141,16 @@ def scheduled_reading(scheduler, port, baudrate, filename):
         READ_TIME, 1, scheduled_reading, (scheduler, port, baudrate, filename)
     )
 
+    # If read time is 0, sensor is in internally timed mode.
+    # Don't poll sensor, and wait for next reading as soon as
+    # previous is completed
+    if READ_TIME == 0:
+        polled = False
+    else:
+        polled = True
+
     try:
-        raw_data = read_instrument(port, baudrate)
+        raw_data = read_instrument(port, baudrate, polled=polled)
 
         if raw_data:
             parsed_data = parse_data(raw_data, TEMP, SAL, K0, K2)
