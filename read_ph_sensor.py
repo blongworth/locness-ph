@@ -51,12 +51,15 @@ def read_instrument(port, baudrate, timeout=2, polled=True):
             while True:
                 ser.write(b"\r")
                 bytesToRead = ser.in_waiting
-                response = ser.read(bytesToRead).decode("ascii").strip()
+                try:
+                    response = ser.readline(bytesToRead).decode("ascii").strip()
+                except UnicodeDecodeError as e:
+                    logger.error(e)
                 if "NAK" in response:
                     logger.info(f"Wake response: {response}")
-                    time.sleep(0.3)  # Short delay between attempts
+                    time.sleep(0.1)  # Short delay between attempts
                     break
-                time.sleep(0.3)  # Short delay between attempts
+                time.sleep(0.1)  # Short delay between attempts
 
             # Send the TS command
             ser.write(b"ts\r")
@@ -65,7 +68,10 @@ def read_instrument(port, baudrate, timeout=2, polled=True):
         # Read lines until we get one starting with '#'
         count = 0
         while True and count <= 20:
-            response = ser.readline().decode("ascii").strip()
+            try:
+                response = ser.readline().decode("ascii").strip()
+            except UnicodeDecodeError as e:
+                logger.error(e)
             # print(response)
             if response.startswith("#"):
                 return response
