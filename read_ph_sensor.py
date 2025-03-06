@@ -53,9 +53,9 @@ def read_instrument(port, baudrate, timeout=2):
             response = ser.read(bytesToRead).decode("ascii").strip()
             if "NAK" in response:
                 logger.info(f"Wake response: {response}")
-                time.sleep(0.3)  # Short delay between attempts
+                time.sleep(0.2)  # Short delay between attempts
                 break
-            time.sleep(0.3)  # Short delay between attempts
+            time.sleep(0.2)  # Short delay between attempts
 
         # Send the TS command
         ser.write(b"ts\r")
@@ -135,6 +135,11 @@ def log_data(filename, data):
 
 
 def scheduled_reading(scheduler, port, baudrate, filename):
+    # Schedule the next reading
+    scheduler.enter(
+        READ_TIME, 1, scheduled_reading, (scheduler, port, baudrate, filename)
+    )
+
     try:
         raw_data = read_instrument(port, baudrate)
 
@@ -149,12 +154,6 @@ def scheduled_reading(scheduler, port, baudrate, filename):
     except serial.SerialException as e:
         logger.error(e)
         exit(1)
-
-    # Schedule the next reading
-    scheduler.enter(
-        READ_TIME, 1, scheduled_reading, (scheduler, port, baudrate, filename)
-    )
-
 
 if __name__ == "__main__":
     # Connect to the SQLite database
