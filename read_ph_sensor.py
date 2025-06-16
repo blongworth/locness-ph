@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 def read_instrument(port, baudrate, timeout=2, polled=True):
     with serial.Serial(port, baudrate, timeout=timeout) as ser:
         if polled == True:
-            logger.info("Wake mFET")
+            logger.debug("Wake mFET")
             while True:
                 ser.write(b"\r")
                 bytesToRead = ser.in_waiting
@@ -56,14 +56,14 @@ def read_instrument(port, baudrate, timeout=2, polled=True):
                 except UnicodeDecodeError as e:
                     logger.error(e)
                 if "NAK" in response:
-                    logger.info(f"Wake response: {response}")
+                    logger.debug(f"Wake response: {response}")
                     time.sleep(0.1)  # Short delay between attempts
                     break
                 time.sleep(0.1)  # Short delay between attempts
 
             # Send the TS command
             ser.write(b"ts\r")
-            logger.info("Sent TS command")
+            logger.debug("Sent TS command")
 
         # Read lines until we get one starting with '#'
         count = 0
@@ -91,6 +91,8 @@ def parse_data(data, temp, sal, k0, k2):
         timestamp = time.time()
         ts = datetime.fromtimestamp(timestamp)
         ph_free, ph_tot = calc_pH(values[5], 0, temp, sal, k0, k2, 0)
+        ph_free = round(float(ph_free), 4)
+        ph_tot = round(float(ph_tot), 4)
         return (
             [ts, samp_num, datetime_str] + values + [temp, sal, k0, k2, ph_free, ph_tot]
         )
@@ -162,7 +164,14 @@ def scheduled_reading(scheduler, port, baudrate, filename):
             parsed_data = parse_data(raw_data, TEMP, SAL, K0, K2)
             log_data(filename, parsed_data)
             log_data_db(parsed_data)
-            logger.info(f"Logged data: {parsed_data}")
+            # Convert datetime (first element) to ISO-8601 string for logging
+            logged_data = parsed_data.copy()
+            if isinstance(logged_data[0], datetime):
+                logged_data[0] = logged_data[0].replace(microsecond=0).isoformat()
+            logger.debug(f"Logged data: {logged_data}")
+            logger.info(
+                f"Current reading: v_bat={parsed_data[3]}, v_bias_pos={parsed_data[4]}, vrse={parsed_data[8]}, vrse_std={parsed_data[9]}, ph_total={parsed_data[19]}"
+            )
         else:
             logger.error("No data received from the instrument")
 

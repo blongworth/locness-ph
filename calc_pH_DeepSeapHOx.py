@@ -97,7 +97,7 @@ def calc_pH(Vrs, Press, Temp, Salt, k0, k2, Pcoefs):
     # ALL SENSORS HAVE A PRESSURE RESPONSE WHICH IS DETERMINED IN THE LAB
     # AND CONTAINED IN THE POLYNOMIAL Pcoefs
     pc    = np.append(Pcoefs, 0) # Matlab wants descending powers & n+1 (add 0)
-    print("Pressure coeff check: ", pc)
+    #print("Pressure coeff check: ", pc)
     pcorr = np.polyval(pc, Press)
     k0TP  = k0T + pcorr
 
