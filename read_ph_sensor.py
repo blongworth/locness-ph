@@ -1,15 +1,15 @@
-import serial
-import time
-import sched
 import csv
-from datetime import datetime
+import logging
 import os
+import sys
 import re
+import sched
+import serial
 import sqlite3
+import time
+from datetime import datetime
 import yaml
 from calc_pH_DeepSeapHOx import calc_pH
-import logging
-#from datetime import timezone
 
 # Read the configuration file
 with open('config.yaml', 'r') as file:
@@ -99,13 +99,11 @@ def parse_data(data, temp, sal, k0, k2):
     else:
         raise ValueError("Invalid data format")
 
-
 def log_data_db(data):
     var_string = ", ".join("?" * len(data))
     query_string = f"INSERT INTO ph VALUES ({var_string});"
     c.execute(query_string, data)
     conn.commit()
-
 
 def log_data(filename, data):
     file_exists = os.path.isfile(filename)
@@ -141,7 +139,6 @@ def log_data(filename, data):
             )
 
         csvwriter.writerow(data)
-
 
 def scheduled_reading(scheduler, port, baudrate, filename):
     # Schedule the next reading
@@ -179,21 +176,25 @@ def scheduled_reading(scheduler, port, baudrate, filename):
         logger.error(e)
         exit(1)
 
+def ensure_database_ready(db_path):
+    """Quick check that database is properly initialized"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute('SELECT 1 FROM ph LIMIT 1')
+        conn.close()
+        return True
+    except sqlite3.OperationalError:
+        return False
+
 if __name__ == "__main__":
+
+    if not ensure_database_ready(DB_PATH):
+        print("Database not initialized. Set up with locness-datamanager first.")
+        sys.exit(1)
+    
     # Connect to the SQLite database
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-
-    # Create a table to store the data
-    # or append if it already exists
-    c.execute("""CREATE TABLE IF NOT EXISTS ph
-            (pc_timestamp TEXT, samp_num INTEGER, ph_timestamp TEXT, 
-             v_bat REAL, v_bias_pos REAL, v_bias_neg REAL, 
-             t_board REAL, h_board REAL, vrse REAL, vrse_std REAL, 
-             cevk REAL, cevk_std REAL, ce_ik REAL, i_sub REAL,
-             cal_temp REAL, cal_sal REAL, k0 REAL, k2 REAL,
-             ph_free REAL, ph_total REAL
-             )""")
 
     s = sched.scheduler(time.time, time.sleep)
 
