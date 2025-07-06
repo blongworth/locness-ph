@@ -11,6 +11,8 @@ from datetime import datetime
 import yaml
 from calc_pH_DeepSeapHOx import calc_pH
 
+# TODO: use integer timestamp instead of datetime for performance
+
 # Read the configuration file
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
