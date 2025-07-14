@@ -5,7 +5,7 @@ description = "Read data from MBARI mFET pH sensor. Stores data in a csv file an
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "numpy==2.0.1",
-    "pyserial==3.5",
-    "pyyaml==6.0",
+    "numpy>=2.3.1",
+    "pyserial>=3.5",
+    "pyyaml>=6.0.2",
 ]

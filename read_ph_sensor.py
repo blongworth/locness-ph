@@ -99,13 +99,22 @@ def parse_data(data, temp, sal, k0, k2):
             [ts, samp_num, datetime_str] + values + [temp, sal, k0, k2, ph_free, ph_tot]
         )
     else:
+        logger.error(f"Data format error: {data}")
         raise ValueError("Invalid data format")
 
 def log_data_db(data):
+    # convert the first element of data from datetime to integer timestamp
+    data = list(data)
+    if isinstance(data[0], datetime):
+        data[0] = int(data[0].timestamp())
     var_string = ", ".join("?" * len(data))
     query_string = f"INSERT INTO ph VALUES ({var_string});"
-    c.execute(query_string, data)
-    conn.commit()
+    try:
+        c.execute(query_string, data)
+        conn.commit()
+    except Exception as e:
+        logger.error(f"Database error: {e}")
+        conn.rollback()
 
 def log_data(filename, data):
     file_exists = os.path.isfile(filename)
@@ -117,7 +126,7 @@ def log_data(filename, data):
             # Write header if file doesn't exist
             csvwriter.writerow(
                 [
-                    "pc_time",
+                    "datetime_utc",
                     "samp_num",
                     "ph_time",
                     "v_bat",
@@ -191,7 +200,7 @@ def ensure_database_ready(db_path):
 if __name__ == "__main__":
 
     if not ensure_database_ready(DB_PATH):
-        print("Database not initialized. Set up with locness-datamanager first.")
+        logger.error("Database not initialized. Set up with locness-datamanager first.")
         sys.exit(1)
     
     # Connect to the SQLite database
