@@ -95,22 +95,65 @@ def parse_data(data, temp, sal, k0, k2):
         ph_free, ph_tot = calc_pH(values[5], 0, temp, sal, k0, k2, 0)
         ph_free = round(float(ph_free), 4)
         ph_tot = round(float(ph_tot), 4)
-        return (
-            [ts, samp_num, datetime_str] + values + [temp, sal, k0, k2, ph_free, ph_tot]
-        )
+        return {
+            "datetime_utc": ts,
+            "samp_num": samp_num,
+            "ph_timestamp": datetime_str,
+            "v_bat": values[0],
+            "v_bias_pos": values[1],
+            "v_bias_neg": values[2],
+            "t_board": values[3],
+            "h_board": values[4],
+            "vrse": values[5],
+            "vrse_std": values[6],
+            "cevk": values[7],
+            "cevk_std": values[8],
+            "ce_ik": values[9],
+            "i_sub": values[10],
+            "cal_temp": temp,
+            "cal_sal": sal,
+            "k0": k0,
+            "k2": k2,
+            "ph_free": ph_free,
+            "ph_total": ph_tot
+        }
     else:
         logger.error(f"Data format error: {data}")
         raise ValueError("Invalid data format")
 
 def log_data_db(data):
     # convert the first element of data from datetime to integer timestamp
-    data = list(data)
-    if isinstance(data[0], datetime):
-        data[0] = int(data[0].timestamp())
-    var_string = ", ".join("?" * len(data))
-    query_string = f"INSERT INTO ph VALUES ({var_string});"
+    data = dict(data)
+    if isinstance(data["datetime_utc"], datetime):
+        data["datetime_utc"] = int(data["datetime_utc"].timestamp())
+    columns = [
+        "datetime_utc",
+        "samp_num",
+        "ph_timestamp",
+        "v_bat",
+        "v_bias_pos",
+        "v_bias_neg",
+        "t_board",
+        "h_board",
+        "vrse",
+        "vrse_std",
+        "cevk",
+        "cevk_std",
+        "ce_ik",
+        "i_sub",
+        "cal_temp",
+        "cal_sal",
+        "k0",
+        "k2",
+        "ph_free",
+        "ph_total"
+    ]
+    values = [data[col] for col in columns]
+    col_string = ", ".join(columns)
+    var_string = ", ".join(["?" for _ in columns])
+    query_string = f"INSERT INTO ph ({col_string}) VALUES ({var_string});"
     try:
-        c.execute(query_string, data)
+        c.execute(query_string, values)
         conn.commit()
     except Exception as e:
         logger.error(f"Database error: {e}")
@@ -118,38 +161,56 @@ def log_data_db(data):
 
 def log_data(filename, data):
     file_exists = os.path.isfile(filename)
-
+    data = dict(data)
+    values = [
+        data["datetime_utc"],
+        data["samp_num"],
+        data["ph_timestamp"],
+        data["v_bat"],
+        data["v_bias_pos"],
+        data["v_bias_neg"],
+        data["t_board"],
+        data["h_board"],
+        data["vrse"],
+        data["vrse_std"],
+        data["cevk"],
+        data["cevk_std"],
+        data["ce_ik"],
+        data["i_sub"],
+        data["cal_temp"],
+        data["cal_sal"],
+        data["k0"],
+        data["k2"],
+        data["ph_free"],
+        data["ph_total"]
+    ]
     with open(filename, "a", newline="") as csvfile:
         csvwriter = csv.writer(csvfile)
-
         if not file_exists:
             # Write header if file doesn't exist
-            csvwriter.writerow(
-                [
-                    "datetime_utc",
-                    "samp_num",
-                    "ph_time",
-                    "v_bat",
-                    "v_bias_pos",
-                    "v_bias_neg",
-                    "t_board",
-                    "h_board",
-                    "vrse",
-                    "vrse_std",
-                    "cevk",
-                    "cevk_std",
-                    "ce_ik",
-                    "i_sub",
-                    "cal_temp",
-                    "cal_sal",
-                    "k0",
-                    "k2",
-                    "ph_free",
-                    "ph_total",
-                ]
-            )
-
-        csvwriter.writerow(data)
+            csvwriter.writerow([
+                "datetime_utc",
+                "samp_num",
+                "ph_timestamp",
+                "v_bat",
+                "v_bias_pos",
+                "v_bias_neg",
+                "t_board",
+                "h_board",
+                "vrse",
+                "vrse_std",
+                "cevk",
+                "cevk_std",
+                "ce_ik",
+                "i_sub",
+                "cal_temp",
+                "cal_sal",
+                "k0",
+                "k2",
+                "ph_free",
+                "ph_total",
+            ])
+        csvwriter.writerow(values)
 
 def scheduled_reading(scheduler, port, baudrate, filename):
     # Schedule the next reading
@@ -173,12 +234,12 @@ def scheduled_reading(scheduler, port, baudrate, filename):
             log_data(filename, parsed_data)
             log_data_db(parsed_data)
             # Convert datetime (first element) to ISO-8601 string for logging
-            logged_data = parsed_data.copy()
-            if isinstance(logged_data[0], datetime):
-                logged_data[0] = logged_data[0].replace(microsecond=0).isoformat()
+            logged_data = dict(parsed_data)
+            if isinstance(logged_data["datetime_utc"], datetime):
+                logged_data["datetime_utc"] = logged_data["datetime_utc"].replace(microsecond=0).isoformat()
             logger.debug(f"Logged data: {logged_data}")
             logger.info(
-                f"Current reading: v_bat={parsed_data[3]}, v_bias_pos={parsed_data[4]}, vrse={parsed_data[8]}, vrse_std={parsed_data[9]}, ph_total={parsed_data[19]}"
+                f"Current reading: v_bat={parsed_data['v_bat']}, v_bias_pos={parsed_data['v_bias_pos']}, vrse={parsed_data['vrse']}, vrse_std={parsed_data['vrse_std']}, ph_total={parsed_data['ph_total']}"
             )
         else:
             logger.error("No data received from the instrument")

@@ -13,7 +13,7 @@ library(patchwork)
 
 ```{r}
 df <- read_csv("pH_data.csv") |> 
-  mutate(ph_time = mdy_hms(ph_time))
+  mutate(ph_timestamp = mdy_hms(ph_timestamp))
 
 df <- df |> 
   filter(pc_time > "2024-08-09 20:19:00")
