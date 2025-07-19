@@ -5,7 +5,11 @@ description = "Read data from MBARI mFET pH sensor. Stores data in a csv file an
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "isfetphcalc",
     "numpy>=2.3.1",
     "pyserial>=3.5",
     "pyyaml>=6.0.2",
 ]
+
+[tool.uv.sources]
+isfetphcalc = { git = "https://github.com/blongworth/isfetphcalc.git" }

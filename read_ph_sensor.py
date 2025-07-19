@@ -9,7 +9,7 @@ import sqlite3
 import time
 from datetime import datetime
 import yaml
-from calc_pH_DeepSeapHOx import calc_pH
+from isfetphcalc import calc_ph
 
 # TODO: use integer timestamp instead of datetime for performance
 
@@ -92,7 +92,7 @@ def parse_data(data, temp, sal, k0, k2):
         values = [float(match.group(i)) for i in range(4, 15)]
         timestamp = time.time()
         ts = datetime.fromtimestamp(timestamp)
-        ph_free, ph_tot = calc_pH(values[5], 0, temp, sal, k0, k2, 0)
+        ph_free, ph_tot = calc_ph(values[5], 0, temp, sal, k0, k2, 0)
         ph_free = round(float(ph_free), 4)
         ph_tot = round(float(ph_tot), 4)
         return {
