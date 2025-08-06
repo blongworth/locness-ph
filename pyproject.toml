@@ -15,7 +15,7 @@ dependencies = [
 isfetphcalc = { git = "https://github.com/blongworth/isfetphcalc.git" }
 
 [project.scripts]
-ph = "read_ph_sensor:main"
+ph = "locness_ph.read_ph_sensor:main"
 
 [build-system]
 requires = ["hatchling"]
