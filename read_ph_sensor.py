@@ -258,13 +258,14 @@ def ensure_database_ready(db_path):
     except sqlite3.OperationalError:
         return False
 
-if __name__ == "__main__":
-
+def main():
+    """Main function to run the scheduled readings"""
     if not ensure_database_ready(DB_PATH):
         logger.error("Database not initialized. Set up with locness-datamanager first.")
         sys.exit(1)
     
     # Connect to the SQLite database
+    global conn, c
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
@@ -280,3 +281,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         conn.close()
         logger.info("Scheduled readings stopped.")
+
+if __name__ == "__main__":
+    main()
