@@ -36,7 +36,7 @@ logging.basicConfig(
     # filename=LOGFILE,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%dT%H:%M:%S%z',
+    datefmt='%Y-%m-%dT%H:%M:%S',
      handlers=[
         logging.FileHandler(LOGFILE),
         logging.StreamHandler()
@@ -239,7 +239,7 @@ def scheduled_reading(scheduler, port, baudrate, filename):
                 logged_data["datetime_utc"] = logged_data["datetime_utc"].replace(microsecond=0).isoformat()
             logger.debug(f"Logged data: {logged_data}")
             logger.info(
-                f"Current reading: v_bat={parsed_data['v_bat']}, v_bias_pos={parsed_data['v_bias_pos']}, vrse={parsed_data['vrse']}, vrse_std={parsed_data['vrse_std']}, ph_total={parsed_data['ph_total']}"
+                f"v_bat: {parsed_data['v_bat']:.3g}, v_bias: {parsed_data['v_bias_pos']:.3g}, vrse: {parsed_data['vrse']:.3g}, vrse_std: {parsed_data['vrse_std']:.3g}, ph_total={parsed_data['ph_total']:.3g}"
             )
         else:
             logger.error("No data received from the instrument")
