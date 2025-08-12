@@ -239,7 +239,7 @@ def scheduled_reading(scheduler, port, baudrate, filename):
                 logged_data["datetime_utc"] = logged_data["datetime_utc"].replace(microsecond=0).isoformat()
             logger.debug(f"Logged data: {logged_data}")
             logger.info(
-                f"v_bat: {parsed_data['v_bat']:.3g}, v_bias: {parsed_data['v_bias_pos']:.3g}, vrse: {parsed_data['vrse']:.3g}, vrse_std: {parsed_data['vrse_std']:.3g}, ph_total={parsed_data['ph_total']:.3g}"
+                f"vm: {parsed_data['v_bat']:.3g}, vb: {parsed_data['v_bias_pos']:.3g}, vrse: {parsed_data['vrse']:.3g}, vrsd: {parsed_data['vrse_std']:.3g}, ph={parsed_data['ph_total']:.3g}"
             )
         else:
             logger.error("No data received from the instrument")
