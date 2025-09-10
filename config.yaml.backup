@@ -1,0 +1,31 @@
+# Default configuration
+# Copy this template to config.yaml and edit as appropriate
+
+# time between readings
+# set to 0 for mFET-timed mode
+read_time: 2 
+
+sensor:
+    # port = '/dev/tty.usbserial-FT9439MT0'
+    port: COM15
+    baudrate: 9600
+
+file:
+    log: C:/Users/CSL 2/Documents/LOCNESS_data/logfiles/ph.log
+    data: C:/Users/CSL 2/Documents/LOCNESS_data/csvs/ph.csv
+    db: C:/Users/CSL 2/Documents/LOCNESS_data/database/locness.db
+
+calibration:
+    temp: 20 # rough value for offline cal
+    sal: 31 # rough valiue for offline cal
+    # DmFET003, sensor T51
+    #k0: -1.4190735
+    #k2: -0.0010626
+
+    # DmFET005, sensor SB10
+    k0: -1.3944286
+    k2: -0.0010700
+
+# Alternate values
+# LOGFILE = 'C:/Users/CSL 2/Documents/LOCNESS_data/pH_data.csv'  # Name of the CSV file
+# DB_PATH = 'C:/Users/CSL 2/Documents/LOCNESS_data/data.db' # Path to SQLite DB
